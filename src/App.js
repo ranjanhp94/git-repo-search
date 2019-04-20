@@ -1,28 +1,60 @@
-import React, { Component } from 'react';
-import logo from './logo.svg';
-import './App.css';
+import React from 'react';
+import axios from 'axios';
+import { Row, Col,CardHeader } from 'reactstrap';
+import RepoDisplay from './components/RepoDisplay';
+import Search from './components/search';
 
-class App extends Component {
-  render() {
-    return (
-      <div className="App">
-        <header className="App-header">
-          <img src={logo} className="App-logo" alt="logo" />
-          <p>
-            Edit <code>src/App.js</code> and save to reload.
-          </p>
-          <a
-            className="App-link"
-            href="https://reactjs.org"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Learn React
-          </a>
-        </header>
-      </div>
-    );
-  }
+class Repo extends React.Component{
+    constructor(props){
+      super(props);
+      this.state = {
+        respos: [],
+        filteredRepo: []
+      }
+      this.handleSubmitForm = this.handleSubmitForm.bind(this);
+    }
+
+    handleSubmitForm(result){
+      if(result === ''){
+        return <h2>No Data Found</h2>
+      } else {
+        axios.get(`https://api.github.com/search/repositories?q=${result}`).then((response) => {
+        this.setState({respos: response.data.items, filteredRepo: response.data.items})
+      })
+      this.setState(prevState => ({
+        respos: prevState.filteredRepo.filter(repo => repo.name.indexOf(result) !== -1)
+      }))
+      }      
+    }
+
+    render(){
+      const headerStyle = {
+        paddingLeft: "150px"
+      };
+
+      let reposData = this.state.respos.map((repo,index) =>{
+        return(
+          <div key = {index}>
+             <Col>
+                  <RepoDisplay repo={repo} />
+             </Col>
+          </div>
+        )
+      })
+
+      return(
+          <div>
+            <CardHeader style = {headerStyle}> Git Repo Search Filter
+            <Search handleSubmitForm = {this.handleSubmitForm} />
+            </CardHeader><br/>
+
+              <Row>
+               {reposData}
+              </Row>
+
+          </div>
+      )
+    }
 }
 
-export default App;
+export default Repo;
